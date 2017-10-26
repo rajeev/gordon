@@ -1,6 +1,6 @@
 # Gordon-Forked
 
-Tweaks and fixes to Gordon, after the official project stopped receiving updated.
+Tweaks and fixes to Gordon, after the official project stopped receiving updates.
 
 ## Fixes bugs
 * Missing rights
