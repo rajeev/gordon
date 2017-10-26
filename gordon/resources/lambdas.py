@@ -132,7 +132,9 @@ class Lambda(base.BaseResource):
                             {
                                 "Effect": "Allow",
                                 "Action": [
-                                    "ec2:CreateNetworkInterface"
+                                    "ec2:CreateNetworkInterface",
+                                    "ec2:DescribeNetworkInterfaces",
+                                    "ec2:DeleteNetworkInterface"
                                 ],
                                 "Resource": [
                                     "*"
@@ -587,7 +589,9 @@ class PythonLambda(Lambda):
     _runtimes = {
         'python': 'python2.7',
         'python2.7': 'python2.7',
-        'python2': 'python2.7'
+        'python2': 'python2.7',
+        'python3.6': 'python3.6',
+        'python3': 'python3.6',
     }
     extension = 'py'
 
