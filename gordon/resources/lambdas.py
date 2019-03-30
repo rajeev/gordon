@@ -602,8 +602,10 @@ class PythonLambda(Lambda):
         'python': 'python2.7',
         'python2.7': 'python2.7',
         'python2': 'python2.7',
+        'python3.7': 'python3.7',
         'python3.6': 'python3.6',
-        'python3': 'python3.6',
+        'python3': 'python3.7',
+
     }
     extension = 'py'
 

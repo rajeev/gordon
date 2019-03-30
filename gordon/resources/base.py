@@ -13,7 +13,7 @@ class BaseResource(object):
     will require one or more CloudFormation/Custom resources to get created
     and wired together.
 
-    This scaffold will allow resources to attach themsevels to the different
+    This scaffold will allow resources to attach themselves to the different
     hooks available trough the template building process.
 
     There are two different types of hooks:
@@ -31,7 +31,7 @@ class BaseResource(object):
 
     Any Gordon project will define up to five stages where resources could be
     registered. Each of these stages allow resources to be registered both as
-    type and instace resources.
+    type and instance resources.
 
     Available stages:
     - pre_project (custom)
