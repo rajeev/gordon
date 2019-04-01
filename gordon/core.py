@@ -39,6 +39,12 @@ AWS_LAMBDA_REGIONS = (
     'eu-west-1',  # EU (Ireland)
     'eu-west-2',  # EU (London)
     'sa-east-1',  # South America (Sao Paulo)
+    'cn-north-1', # China (Beijing)
+    'cn-northwest-1', # China (Ningxia)
+    'eu-west-3', # EU (Paris)
+    'eu-north-1', # EU (Stockholm)
+    'us-gov-east-1', # AWS GovCloud (US-East)
+    'us-gov-west-1', # AWS GovCloud (US)
 )
 
 AVAILABLE_RESOURCES = {
