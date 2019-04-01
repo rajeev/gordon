@@ -12,3 +12,4 @@ dist
 _build
 docs/_build
 build/**
+.idea

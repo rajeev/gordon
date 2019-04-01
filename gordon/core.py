@@ -22,7 +22,7 @@ from . import protocols
 
 SETTINGS_FILE = 'settings.yml'
 
-# Lambda region list updated on Nov 28, 2017 from
+# Lambda region list updated on April 1, 2019 from
 # http://docs.aws.amazon.com/general/latest/gr/rande.html
 AWS_LAMBDA_REGIONS = (
     'us-east-1',  # US East (N. Virginia)
