@@ -7,6 +7,9 @@
 [![Travis Build](https://api.travis-ci.org/jorgebastida/gordon.svg?branch=master)](https://travis-ci.org/jorgebastida/gordon)
 [![Join the chat at https://gitter.im/jorgebastida/gordon](https://img.shields.io/badge/chat-on%20gitter-blue.svg)](https://gitter.im/jorgebastida/gordon)
 
+# Gordon-Forked
+
+Tweaks and fixes to Gordon, after the official project stopped receiving updates.
 
 Gordon is a tool to create, wire and deploy AWS Lambdas using CloudFormation
 
@@ -78,6 +81,8 @@ Why introduce yet-another framework when you can build lambdas using AWS service
 Keep it simple! 😀
 
 
+
+
 Isolation between stages?
 -----------------------------------
 
@@ -119,3 +124,8 @@ Feedback
 -----------
 
 We would love to hear as much feedback as possible! If you have any comment, please drop me an email to me@jorgebastida.com
+
+## Fixes bugs
+* Missing rights
+* Added Python3
+* Added support for environment variables

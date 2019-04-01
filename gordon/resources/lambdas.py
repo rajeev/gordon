@@ -602,8 +602,10 @@ class PythonLambda(Lambda):
         'python': 'python2.7',
         'python2.7': 'python2.7',
         'python2': 'python2.7',
+        'python3.7': 'python3.7',
         'python3.6': 'python3.6',
-        'python3': 'python3.6',
+        'python3': 'python3.7',
+
     }
     extension = 'py'
 
@@ -614,7 +616,16 @@ class PythonLambda(Lambda):
         commands = []
         commands.append('cp -Rf * {target}')
         if os.path.isfile(requirements_path):
-            commands.append('{pip_path} install --install-option="--prefix=" -r requirements.txt -q -t {target} {pip_install_extra}')
+            commands.append('virtualenv {target}/venv')
+            commands.append(
+               'source {target}/venv/bin/activate && '
+               '{pip_path} install -r requirements.txt -q {pip_install_extra} && '
+               'if [ -e {target}/venv/lib/python2.7/site-packages ]; then mv {target}/venv/lib/python2.7/site-packages/* {target}/; fi ; '
+               'if [ -e {target}/venv/lib64/python2.7/site-packages ]; then mv {target}/venv/lib64/python2.7/site-packages/* {target}/; fi ; '
+               'if [ -e {target}/venv/lib/python2.7/dist-packages ]; then mv {target}/venv/lib/python2.7/dist-packages/* {target}/; fi ; '
+               'if [ -e {target}/venv/lib64/python2.7/dist-packages ]; then mv {target}/venv/lib64/python2.7/dist-packages/* {target}/; fi ; '
+               'rm -rf {target}/venv')
+
             commands.append('cd {target} && find . -name "*.pyc" -delete')
         return commands
 

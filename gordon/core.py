@@ -22,7 +22,7 @@ from . import protocols
 
 SETTINGS_FILE = 'settings.yml'
 
-# Lambda region list updated on Nov 28, 2017 from
+# Lambda region list updated on April 1, 2019 from
 # http://docs.aws.amazon.com/general/latest/gr/rande.html
 AWS_LAMBDA_REGIONS = (
     'us-east-1',  # US East (N. Virginia)
@@ -39,6 +39,12 @@ AWS_LAMBDA_REGIONS = (
     'eu-west-1',  # EU (Ireland)
     'eu-west-2',  # EU (London)
     'sa-east-1',  # South America (Sao Paulo)
+    'cn-north-1', # China (Beijing)
+    'cn-northwest-1', # China (Ningxia)
+    'eu-west-3', # EU (Paris)
+    'eu-north-1', # EU (Stockholm)
+    'us-gov-east-1', # AWS GovCloud (US-East)
+    'us-gov-west-1', # AWS GovCloud (US)
 )
 
 AVAILABLE_RESOURCES = {
@@ -461,15 +467,7 @@ class ProjectApply(ProjectApplyLoopBase):
             os.path.join(self.path, 'parameters', '{}.yml'.format(self.stage)),
         )
 
-        # If not defined in settings.yml then retrieve the account_id of the credentials currently in use.
-        # The first approach is slightly more lightweight than the second.
-        if self.settings.get('aws-account-id', None) == None:
-            try:
-                aws_account_id = boto3.client('iam').get_user()['User']['Arn'].split(':')[4]
-            except ClientError:
-                aws_account_id = boto3.client('iam').list_users(MaxItems=1)['Users'][0]['Arn'].split(':')[4]
-        else:
-            aws_account_id = self.settings.get('aws-account-id', None)
+        aws_account_id = boto3.client('sts').get_caller_identity()['Account']
 
         context = {
             'stage': self.stage,

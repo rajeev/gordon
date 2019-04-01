@@ -11,11 +11,6 @@ install_requires = [
     'six>1.9,<2.0'
 ]
 
-# as of Python >= 2.7 argparse module is maintained within Python.
-if sys.version_info < (2, 7):
-    install_requires.append('argparse>=1.1.0')
-
-
 setup(
     name='gordon',
     version='0.7.0',
@@ -44,7 +39,7 @@ setup(
             'gordon = gordon.bin:main',
         ]
     },
-    include_package_data=True,
+    include_package_data=False,
     zip_safe=False,
-    use_2to3=True
+    use_2to3=False
 )
