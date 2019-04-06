@@ -111,7 +111,7 @@ class ApplicationLoadBalancer(BaseResource):
 
         alb = template.add_resource(elb2.LoadBalancer(
             self.in_project_cf_name,
-            Name=self.name,
+            Name=self.in_project_cf_name,
             DependsOn=[self._valid_cf_name('alb-tg')],
             **vpc
         ))
