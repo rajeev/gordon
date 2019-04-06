@@ -1,5 +1,9 @@
 import time
 import boto3
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 from cfnresponse import send, SUCCESS
 
@@ -16,11 +20,12 @@ def publish_version(function_name):
 
 def handler(event, context, sleep=5):
 
+    logger.info('got event {}'.format(event))
     # We don't want to delete versions when CloudFormation says so, because
     # we want to keep them forever. If this delete comes from a stack delete
     # operation, deleteing the lambda will delete all related versions.
     if event['RequestType'] == 'Delete':
-        send(event, context, SUCCESS)
+        send(event, context, SUCCESS, {})
         return
 
     output = publish_version(function_name=event['ResourceProperties']['FunctionName'])
@@ -29,4 +34,4 @@ def handler(event, context, sleep=5):
     # FUTURE: Loop until available
     time.sleep(sleep)
 
-    send(event, context, SUCCESS, response_data={'Version': output['Version']})
+    send(event, context, SUCCESS, {'Version': output['Version']})

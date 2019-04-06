@@ -3,7 +3,7 @@ lambdas:
   version:
     code: version
     handler: version.handler
-    runtime: python2.7
+    runtime: python3.7
     description: Publishes new versions of Lambdas.
     timeout: 300
     cli-output: False

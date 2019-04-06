@@ -620,10 +620,10 @@ class PythonLambda(Lambda):
             commands.append(
                'source {target}/venv/bin/activate && '
                '{pip_path} install -r requirements.txt -q {pip_install_extra} && '
-               'if [ -e {target}/venv/lib/python2.7/site-packages ]; then mv {target}/venv/lib/python2.7/site-packages/* {target}/; fi ; '
-               'if [ -e {target}/venv/lib64/python2.7/site-packages ]; then mv {target}/venv/lib64/python2.7/site-packages/* {target}/; fi ; '
-               'if [ -e {target}/venv/lib/python2.7/dist-packages ]; then mv {target}/venv/lib/python2.7/dist-packages/* {target}/; fi ; '
-               'if [ -e {target}/venv/lib64/python2.7/dist-packages ]; then mv {target}/venv/lib64/python2.7/dist-packages/* {target}/; fi ; '
+               'if [ -e {target}/venv/lib/python3.7/site-packages ]; then mv {target}/venv/lib/python3.7/site-packages/* {target}/; fi ; '
+               'if [ -e {target}/venv/lib64/python3.7/site-packages ]; then mv {target}/venv/lib64/python3.7/site-packages/* {target}/; fi ; '
+               'if [ -e {target}/venv/lib/python3.7/dist-packages ]; then mv {target}/venv/lib/python3.7/dist-packages/* {target}/; fi ; '
+               'if [ -e {target}/venv/lib64/python3.7/dist-packages ]; then mv {target}/venv/lib64/python3.7/dist-packages/* {target}/; fi ; '
                'rm -rf {target}/venv')
 
             commands.append('cd {target} && find . -name "*.pyc" -delete')

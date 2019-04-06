@@ -47,6 +47,7 @@ AWS_LAMBDA_REGIONS = (
     'us-gov-west-1', # AWS GovCloud (US)
 )
 
+
 AVAILABLE_RESOURCES = {
     'lambdas': resources.lambdas.Lambda,
     'dynamodb': resources.dynamodb.Dynamodb,
@@ -55,7 +56,8 @@ AVAILABLE_RESOURCES = {
     'events': resources.events.CloudWatchEvent,
     'vpcs': resources.vpcs.Vpc,
     'contexts': resources.contexts.LambdasContexts,
-    'apigateway': resources.apigateway.ApiGateway
+    'apigateway': resources.apigateway.ApiGateway,
+    'application-load-balancer': resources.alb.ApplicationLoadBalancer,
 }
 
 
