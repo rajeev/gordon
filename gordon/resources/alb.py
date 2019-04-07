@@ -81,7 +81,7 @@ class ApplicationLoadBalancer(BaseResource):
             troposphere.awslambda.Permission(
                 self._valid_cf_name('alb-tg', 'permission'),
                 Action="lambda:InvokeFunction",
-                FunctionName=self.get_destination_arn(self.settings.get('target')),
+                FunctionName=self.get_destination_arn(self.settings.get('lambda')),
                 Principal="elasticloadbalancing.amazonaws.com",
                 # TODO: doesn't seem to work with CF; is this a security issue?
                 #  yes, aws confifmed it is a CF bug; filed a ticket
@@ -93,12 +93,12 @@ class ApplicationLoadBalancer(BaseResource):
         #The Target Group
         tg = template.add_resource(LambdaTargetGroup(
             self._valid_cf_name('alb-tg'),
-            DependsOn=[self._valid_cf_name('alb-tg', 'permission'), self.get_function_name(self.settings.get('target'))],
+            DependsOn=[self._valid_cf_name('alb-tg', 'permission'), self.get_function_name(self.settings.get('lambda'))],
             TargetType="lambda",
             Targets=[
                 elb2.TargetDescription(
                     self._valid_cf_name('alb-target-lambda'),
-                    Id=troposphere.Ref(self.get_function_name(self.settings.get('target'))),
+                    Id=troposphere.Ref(self.get_function_name(self.settings.get('lambda'))),
                 )
             ],
         ))
@@ -118,7 +118,7 @@ class ApplicationLoadBalancer(BaseResource):
 
         listener = template.add_resource(elb2.Listener(
             self._valid_cf_name('alb-listener'),
-            DependsOn=[self._valid_cf_name('alb-tg'), self.get_function_name(self.settings.get('target'))],
+            DependsOn=[self._valid_cf_name('alb-tg'), self.get_function_name(self.settings.get('lambda'))],
             LoadBalancerArn=alb.Ref(),
             DefaultActions=[action],
             Port=80,
