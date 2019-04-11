@@ -1,7 +1,7 @@
 Application Load Balancer
 ================================
 
-Application Load Balancer. Kind of undocumented at the moment.
+Application Load Balancer.
 
 In theory, it sets up an ALB along with required permissions, within the specified vpc. This is extremely useful if you simply want to use frameworks like starlette, fastapi, etc, without the overhead of configuring the URLs with API Gateway.
 
@@ -21,3 +21,4 @@ Anatomy of the integration
       cli-output: { BOOLEAN }
       vpc: { VPC ID }
       lambda: { target lambda }
+      certificate: { acm certificate arn }

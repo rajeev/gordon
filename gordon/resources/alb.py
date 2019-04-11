@@ -1,10 +1,15 @@
 import six
+import time
+import json
 
 import troposphere
-from troposphere import elasticloadbalancingv2 as elb2, iam, awslambda, s3
+from troposphere import elasticloadbalancingv2 as elb2, iam, awslambda, s3, certificatemanager as cert
 from troposphere.validators import integer, tg_healthcheck_port
 from .base import BaseResource
 from gordon import utils
+from gordon.contrib.helpers.resources import MaintenanceModeOn, MaintenanceModeOff
+
+from gordon.contrib.helpers.resources import Sleep
 
 from clint.textui import colored, puts, indent
 
@@ -27,6 +32,31 @@ class LambdaTargetGroup(troposphere.AWSObject):
         'UnhealthyThresholdCount': (integer, False),
     }
 
+
+class FixedResponseConfig(troposphere.AWSProperty):
+    props = {
+        "ContentType": (str, True),
+        "MessageBody": (str, True),
+        "StatusCode": (str, True),
+    }
+
+class RedirectConfig(troposphere.AWSProperty):
+    props = {
+        "Host": (str, True),
+        "Path": (str, True),
+        "Port": (str, True),
+        "Protocol": (str, True),
+        "Query": (str, True),
+        "StatusCode": (str, True),
+    }
+
+class Action(elb2.Action):
+    props = {
+        'Type': (str, True),
+        'TargetGroupArn': (str, False),
+        'FixedResponseConfig': (FixedResponseConfig, False),
+        'RedirectConfig': (RedirectConfig, False),
+    }
 
 class ApplicationLoadBalancer(BaseResource):
 
@@ -76,8 +106,31 @@ class ApplicationLoadBalancer(BaseResource):
             #TODO: create a VPC here?
             pass
 
+        lambda_version = 'lambda:contrib_helpers:maintenance:current'
+        lambda_ref = troposphere.Ref(self.project.reference(lambda_version))
 
-        template.add_resource(
+
+        mmon = template.add_resource(
+            MaintenanceModeOn.create_with(
+                utils.valid_cloudformation_name(self.name, "MMOn"),
+                DependsOn = [
+                    self.project.reference(lambda_version)
+                ],
+                lambda_arn=lambda_ref,
+                Timestamp=int(time.time()),
+                Project=self.project.name,
+                FRule=self._valid_cf_name('alb-forward-rule'),
+                MRule=self._valid_cf_name('alb-maintenance-rule'),
+                Stack=troposphere.Join('-', [
+                    troposphere.Ref('Stage'),
+                    self.project.name,
+                    'r'
+                ])
+
+            )
+        )
+
+        perm = template.add_resource(
             troposphere.awslambda.Permission(
                 self._valid_cf_name('alb-tg', 'permission'),
                 Action="lambda:InvokeFunction",
@@ -103,11 +156,9 @@ class ApplicationLoadBalancer(BaseResource):
             ],
         ))
 
-        action = elb2.Action(
-            self._valid_cf_name('alb-action'),
-            Type='forward',
-            TargetGroupArn=tg.Ref()
-        )
+
+        # The Load Balancer itself
+
 
         alb = template.add_resource(elb2.LoadBalancer(
             self.in_project_cf_name,
@@ -116,14 +167,122 @@ class ApplicationLoadBalancer(BaseResource):
             **vpc
         ))
 
+
+
+        # HTTP listener; redirects to HTTPS
+
+        default_action = Action(
+            self._valid_cf_name('alb-default-action'),
+            Type='redirect',
+            RedirectConfig=RedirectConfig(
+                Host="#{host}",
+                Path="/#{path}",
+                Port="443",
+                Protocol="HTTPS",
+                Query="#{query}",
+                StatusCode="HTTP_302"
+            )
+        )
+
         listener = template.add_resource(elb2.Listener(
             self._valid_cf_name('alb-listener'),
             DependsOn=[self._valid_cf_name('alb-tg'), self.get_function_name(self.settings.get('lambda'))],
             LoadBalancerArn=alb.Ref(),
-            DefaultActions=[action],
+            DefaultActions=[default_action],
             Port=80,
             Protocol="HTTP"
         ))
+
+        # HTTPS Listener: has two rules: one for flowing traffic to Lambda; and a lower
+        # priority rule for setting up maintenance mode
+
+        service_default_action = Action(
+            self._valid_cf_name('alb-default-action'),
+            Type='fixed-response',
+            FixedResponseConfig=FixedResponseConfig(
+                ContentType="application/json",
+                StatusCode="503",
+                MessageBody=json.dumps({'EndOf':'TheLine'})
+            )
+        )
+
+        ssl_listener = template.add_resource(elb2.Listener(
+            self._valid_cf_name('alb-ssllistener'),
+            DependsOn=[self._valid_cf_name('alb-tg'), self.get_function_name(self.settings.get('lambda'))],
+            LoadBalancerArn=alb.Ref(),
+            DefaultActions=[service_default_action],
+            Port=443,
+            Protocol="HTTPS",
+            Certificates=[elb2.Certificate(CertificateArn=self.settings.get('certificate'))]
+        ))
+
+        ## The rule that forwards traffic to lambda
+
+        tg_forward_action = Action(
+            self._valid_cf_name('alb-forward-action'),
+            Type='forward',
+            TargetGroupArn=tg.Ref()
+        )
+
+        tg_forward_condition = elb2.Condition(
+            self._valid_cf_name('alb-forward-condition'),
+            Field="path-pattern",
+            Values=['*']
+        )
+
+        template.add_resource(elb2.ListenerRule(
+            self._valid_cf_name('alb-forward-rule'),
+            Actions=[tg_forward_action],
+            Conditions=[tg_forward_condition],
+            ListenerArn=ssl_listener.Ref(),
+            Priority=1
+        ))
+
+        # The rule for setting up maintenance mode
+
+        tg_maintenance_action = Action(
+            self._valid_cf_name('alb-maintenance-action'),
+            Type='fixed-response',
+            FixedResponseConfig=FixedResponseConfig(
+                ContentType="application/json",
+                StatusCode="503",
+                MessageBody=json.dumps({'Down':'Maintenance'})
+            )
+        )
+
+        tg_maintenance_condition = elb2.Condition(
+            self._valid_cf_name('alb-maintenance-condition'),
+            Field="path-pattern",
+            Values=['*']
+        )
+
+        template.add_resource(elb2.ListenerRule(
+            self._valid_cf_name('alb-maintenance-rule'),
+            Actions=[tg_maintenance_action],
+            Conditions=[tg_maintenance_condition],
+            ListenerArn=ssl_listener.Ref(),
+            Priority=100
+        ))
+
+
+        mmoff = template.add_resource(
+            MaintenanceModeOff.create_with(
+                utils.valid_cloudformation_name(self.name, "MMOff"),
+                DependsOn = [
+                    listener.name
+                ],
+                lambda_arn=lambda_ref,
+                Timestamp=int(time.time()),
+                Project=self.project.name,
+                FRule = self._valid_cf_name('alb-forward-rule'),
+                MRule = self._valid_cf_name('alb-maintenance-rule'),
+                Stack=troposphere.Join('-', [
+                    troposphere.Ref('Stage'),
+                    self.project.name,
+                    'r'
+                ])
+            )
+        )
 
         if self._get_true_false('cli-output', 't'):
             template.add_output([

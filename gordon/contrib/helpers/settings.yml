@@ -2,7 +2,29 @@ lambdas:
   sleep:
     code: sleep
     handler: sleep.handler
-    runtime: python2.7
+    runtime: python3.7
     description: Sleeps several seconds before succeeding.
     timeout: 300
     cli-output: False
+
+  maintenance:
+    code: maintenance
+    handler: maintenance.handler
+    runtime: python3.7
+    description: Sets Maintenance Mode on and off
+    timeout: 300
+    cli-output: False
+    policies:
+      manage_version:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Action:
+              - "cloudformation:DescribeStackResource"
+            Resource: "arn:aws:cloudformation:*:*:*"
+            Effect: "Allow"
+          -
+            Action:
+                - "elasticloadbalancing:SetRulePriorities"
+            Resource: "arn:aws:elasticloadbalancing:*:*:*"
+            Effect: "Allow"
